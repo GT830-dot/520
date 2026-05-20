@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>致你</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=LXGW+WenKai:wght@300;400&family=Cormorant+Garamond:ital,wght@0,300;1,300&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-deep: #141018;
+            --bg-mid: #1c1420;
+            --bg-warm: #231a24;
+            --rose-muted: #b07888;
+            --rose-soft: #c9949e;
+            --rose-pale: #d4a8af;
+            --champagne: #c8a882;
+            --ivory: #f0e4d8;
+            --cream: #ede2d6;
+            --text-primary: rgba(240, 228, 216, 0.88);
+            --text-secondary: rgba(201, 148, 158, 0.7);
+            --text-whisper: rgba(201, 148, 158, 0.35);
+            --glow-rose: rgba(176, 120, 136, 0.25);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'LXGW WenKai', serif;
+            overflow: hidden;
+            height: 100vh;
+            cursor: default;
+            user-select: none;
+            background: var(--bg-deep);
+        }
+
+        /* ====== 背景层 ====== */
+        .bg {
+            position: fixed; inset: 0;
+            background:
+                radial-gradient(ellipse 80% 60% at 30% 70%, rgba(176, 120, 136, 0.08) 0%, transparent 70%),
+                radial-gradient(ellipse 60% 50% at 70% 30%, rgba(200, 168, 130, 0.06) 0%, transparent 60%),
+                linear-gradient(175deg, var(--bg-deep) 0%, var(--bg-mid) 40%, var(--bg-warm) 100%);
+            z-index: -3;
+        }
+
+        /* 噪点纹理 */
+        .grain {
+            position: fixed; inset: 0;
+            z-index: 998;
+            pointer-events: none;
+            opacity: 0.03;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+        }
+
+        /* ====== 星星 ====== */
+        .stars { position: fixed; inset: 0; z-index: -2; pointer-events: none; }
+        .star {
+            position: absolute;
+            width: 1.5px; height: 1.5px;
+            background: var(--cream);
+            border-radius: 50%;
+            animation: twinkle ease-in-out infinite alternate;
+        }
+        @keyframes twinkle {
+            from { opacity: 0.1; transform: scale(1); }
+            to { opacity: 0.6; transform: scale(1.3); }
+        }
+
+        /* ====== 落花 ====== */
+        .petal {
+            position: fixed;
+            top: -50px;
+            z-index: -1;
+            pointer-events: none;
+            animation: petalFall linear infinite;
+            opacity: 0;
+        }
+        @keyframes petalFall {
+            0% {
+                transform: translateY(-5vh) rotate(0deg) translateX(0) scale(0.8);
+                opacity: 0;
+            }
+            8% { opacity: 0.5; }
+            50% { transform: translateY(50vh) rotate(360deg) translateX(60px) scale(1); }
+            92% { opacity: 0.35; }
+            100% {
+                transform: translateY(108vh) rotate(720deg) translateX(-30px) scale(0.6);
+                opacity: 0;
+            }
+        }
+
+        /* ====== 飘落的情话 — 三层视觉等级 ====== */
+        .falling-msg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 2;
+            pointer-events: none;
+            font-family: 'LXGW WenKai', serif;
+            font-weight: 300;
+            letter-spacing: 0.15em;
+            white-space: nowrap;
+            animation: msgDrift linear forwards;
+            opacity: 0;
+        }
+        /* 主句 — 玫瑰粉，较大，最亮 */
+        .falling-msg.tier-main {
+            font-size: 1.25rem;
+            color: rgba(201, 148, 158, 0.85);
+            text-shadow: 0 0 25px rgba(176, 120, 136, 0.3);
+        }
+        /* 副句 — 香槟暖色，中等，柔和 */
+        .falling-msg.tier-sub {
+            font-size: 1.05rem;
+            color: rgba(200, 168, 130, 0.65);
+            text-shadow: 0 0 20px rgba(200, 168, 130, 0.15);
+        }
+        /* 远句 — 象牙白，最小，最淡 */
+        .falling-msg.tier-far {
+            font-size: 0.88rem;
+            color: rgba(240, 228, 216, 0.35);
+            text-shadow: none;
+        }
+
+        @keyframes msgDrift {
+            0% {
+                transform: translateY(-5vh) translateX(0) rotate(-0.8deg);
+                opacity: 0;
+            }
+            5% { opacity: 1; }
+            50% {
+                transform: translateY(48vh) translateX(35px) rotate(0.8deg);
+            }
+            95% { opacity: 0.6; }
+            100% {
+                transform: translateY(106vh) translateX(-15px) rotate(-0.3deg);
+                opacity: 0;
+            }
+        }
+
+        /* ====== 主容器 ====== */
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            text-align: center;
+            color: var(--text-primary);
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ====== 中心装饰 — 淡雅水墨花枝 ====== */
+        .center-art {
+            position: relative;
+            width: 220px; height: 220px;
+            margin-bottom: 2rem;
+            animation: fadeInSlow 3s ease both;
+        }
+        .center-art svg {
+            width: 100%; height: 100%;
+            filter: drop-shadow(0 0 40px var(--glow-rose));
+        }
+        @keyframes fadeInSlow {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        /* ====== 含蓄的副标题 ====== */
+        .subtitle {
+            font-family: 'LXGW WenKai', serif;
+            font-size: 1.3rem;
+            font-weight: 300;
+            color: var(--text-secondary);
+            letter-spacing: 0.5em;
+            margin-bottom: 2.5rem;
+            animation: fadeInUp 2s ease 0.8s both;
+        }
+
+        /* ====== 心形按钮 — 线条感 ====== */
+        .heart-btn {
+            width: 64px; height: 64px;
+            margin: 0.5rem 0 1rem;
+            cursor: pointer;
+            animation: heartbeat 2.4s ease-in-out infinite, fadeInUp 2s ease 1.2s both;
+            transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            background: none; border: none;
+            position: relative;
+        }
+        .heart-btn::after {
+            content: '';
+            position: absolute; inset: -12px;
+            border-radius: 50%;
+            background: radial-gradient(circle, var(--glow-rose) 0%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.4s;
+        }
+        .heart-btn:hover::after { opacity: 1; }
+        .heart-btn:hover {
+            transform: scale(1.15);
+        }
+        .heart-btn svg {
+            width: 100%; height: 100%;
+            filter: drop-shadow(0 0 15px var(--glow-rose));
+        }
+        @keyframes heartbeat {
+            0%, 100% { transform: scale(1); }
+            8% { transform: scale(1.08); }
+            16% { transform: scale(1); }
+            24% { transform: scale(1.05); }
+            32% { transform: scale(1); }
+        }
+
+        /* ====== 提示 ====== */
+        .hint {
+            font-size: 0.8rem;
+            color: var(--text-whisper);
+            letter-spacing: 0.2em;
+            animation: fadeInUp 2s ease 1.8s both;
+        }
+
+        /* ====== 底部日期 ====== */
+        .date-info {
+            position: fixed;
+            bottom: 28px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.75rem;
+            color: var(--text-whisper);
+            letter-spacing: 0.15em;
+            font-weight: 300;
+            animation: fadeInUp 2s ease 2.5s both;
+        }
+
+        /* ====== 浮动文字（点击用） ====== */
+        .float-text {
+            position: fixed;
+            pointer-events: none;
+            font-family: 'LXGW WenKai', serif;
+            font-size: 1rem;
+            font-weight: 300;
+            color: var(--rose-soft);
+            animation: floatUp 2.2s ease-out forwards;
+            text-shadow: 0 0 20px var(--glow-rose);
+            z-index: 100;
+        }
+        @keyframes floatUp {
+            0% { transform: translateY(0) scale(0.6); opacity: 0; }
+            15% { transform: translateY(-10px) scale(1.1); opacity: 0.9; }
+            100% { transform: translateY(-120px) scale(0.7); opacity: 0; }
+        }
+
+        /* ====== 通用动画 ====== */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ====== 点击粒子 ====== */
+        .click-heart {
+            position: fixed;
+            pointer-events: none;
+            z-index: 999;
+            animation: heartBurst 1.2s ease-out forwards;
+        }
+        @keyframes heartBurst {
+            0% { transform: scale(0) rotate(0deg); opacity: 1; }
+            40% { transform: scale(1.1) rotate(10deg); opacity: 0.7; }
+            100% { transform: scale(0.3) translateY(-90px) rotate(-8deg); opacity: 0; }
+        }
+
+        /* ====== 全屏开花 ====== */
+        .bloom-overlay {
+            position: fixed; inset: 0;
+            z-index: 50;
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .bloom-text {
+            font-family: 'LXGW WenKai', serif;
+            font-size: 3.5rem;
+            font-weight: 300;
+            color: var(--rose-pale);
+            letter-spacing: 0.3em;
+            animation: bloomIn 2.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+            text-shadow: 0 0 60px var(--glow-rose), 0 0 120px rgba(176, 120, 136, 0.15);
+        }
+        @keyframes bloomIn {
+            0% { transform: scale(0.3) rotate(-5deg); opacity: 0; filter: blur(8px); }
+            60% { transform: scale(1.05) rotate(1deg); opacity: 0.9; filter: blur(0); }
+            100% { transform: scale(1) rotate(0deg); opacity: 1; filter: blur(0); }
+        }
+
+        /* ====== 旋转的花瓣 ====== */
+        .rotating-hearts {
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 60;
+        }
+        .rotating-hearts span {
+            position: absolute;
+            animation: orbitPetal 3.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+            opacity: 0;
+        }
+        @keyframes orbitPetal {
+            0% { transform: rotate(0deg) translateX(0) scale(0); opacity: 0; }
+            15% { opacity: 0.8; transform: rotate(54deg) translateX(80px) scale(1); }
+            75% { opacity: 0.5; transform: rotate(270deg) translateX(100px) scale(0.8); }
+            100% { opacity: 0; transform: rotate(360deg) translateX(150px) scale(0.3); }
+        }
+
+        /* ====== 音乐按钮 ====== */
+        .music-btn {
+            position: fixed;
+            top: 24px; right: 24px;
+            width: 36px; height: 36px;
+            border: 1px solid rgba(201, 148, 158, 0.2);
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(8px);
+            color: var(--text-whisper);
+            font-size: 1rem;
+            cursor: pointer;
+            z-index: 100;
+            transition: all 0.4s;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .music-btn:hover {
+            border-color: rgba(201, 148, 158, 0.4);
+            color: var(--text-secondary);
+        }
+        .music-btn.active {
+            border-color: rgba(201, 148, 158, 0.45);
+            color: var(--rose-soft);
+            box-shadow: 0 0 20px rgba(176, 120, 136, 0.15);
+        }
+
+        /* ====== 隐藏的520彩蛋 ====== */
+        .easter-egg {
+            position: fixed;
+            bottom: 60px;
+            right: 30px;
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 0.65rem;
+            font-style: italic;
+            font-weight: 300;
+            color: rgba(200, 168, 130, 0.15);
+            letter-spacing: 0.3em;
+            z-index: 1;
+            animation: fadeInUp 3s ease 4s both;
+            transition: color 1s;
+        }
+        .easter-egg:hover {
+            color: rgba(200, 168, 130, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <div class="bg"></div>
+    <div class="grain"></div>
+    <div class="stars" id="stars"></div>
+
+    <div class="container">
+        <!-- 中心：淡雅水墨花枝 -->
+        <div class="center-art">
+            <svg viewBox="0 0 220 220" xmlns="http://www.w3.org/2000/svg">
+                <!-- 枝干 -->
+                <path d="M110 190 Q95 150, 80 120 Q65 90, 55 65 Q48 45, 60 30"
+                      stroke="rgba(200,168,130,0.3)" stroke-width="1.2" fill="none"
+                      stroke-linecap="round"/>
+                <path d="M110 190 Q120 140, 140 105 Q155 75, 165 50"
+                      stroke="rgba(200,168,130,0.25)" stroke-width="1" fill="none"
+                      stroke-linecap="round"/>
+                <!-- 小枝 -->
+                <path d="M80 120 Q60 115, 45 105" stroke="rgba(200,168,130,0.2)" stroke-width="0.8" fill="none" stroke-linecap="round"/>
+                <path d="M140 105 Q155 95, 170 90" stroke="rgba(200,168,130,0.2)" stroke-width="0.8" fill="none" stroke-linecap="round"/>
+
+                <!-- 花朵 -->
+                <g opacity="0.5">
+                    <!-- 花1 -->
+                    <circle cx="58" cy="32" r="8" fill="none" stroke="rgba(176,120,136,0.4)" stroke-width="0.8"/>
+                    <circle cx="52" cy="28" r="3.5" fill="rgba(176,120,136,0.15)"/>
+                    <circle cx="64" cy="28" r="3.5" fill="rgba(176,120,136,0.12)"/>
+                    <circle cx="55" cy="37" r="3.5" fill="rgba(176,120,136,0.1)"/>
+                    <circle cx="61" cy="37" r="3" fill="rgba(176,120,136,0.08)"/>
+                    <circle cx="58" cy="32" r="1.5" fill="rgba(200,168,130,0.3)"/>
+                </g>
+                <g opacity="0.4">
+                    <!-- 花2 -->
+                    <circle cx="165" cy="52" r="6" fill="none" stroke="rgba(176,120,136,0.35)" stroke-width="0.7"/>
+                    <circle cx="160" cy="49" r="2.5" fill="rgba(176,120,136,0.12)"/>
+                    <circle cx="170" cy="49" r="2.5" fill="rgba(176,120,136,0.1)"/>
+                    <circle cx="162" cy="56" r="2.5" fill="rgba(176,120,136,0.08)"/>
+                    <circle cx="168" cy="56" r="2" fill="rgba(176,120,136,0.07)"/>
+                    <circle cx="165" cy="52" r="1.2" fill="rgba(200,168,130,0.25)"/>
+                </g>
+                <g opacity="0.35">
+                    <!-- 花3 半开 -->
+                    <ellipse cx="43" cy="103" rx="4" ry="6" fill="rgba(176,120,136,0.12)" transform="rotate(-20, 43, 103)"/>
+                    <ellipse cx="47" cy="100" rx="3.5" ry="5.5" fill="rgba(176,120,136,0.1)" transform="rotate(15, 47, 100)"/>
+                    <circle cx="45" cy="103" r="1" fill="rgba(200,168,130,0.2)"/>
+                </g>
+                <!-- 花苞 -->
+                <ellipse cx="172" cy="88" rx="2.5" ry="4" fill="rgba(176,120,136,0.15)" transform="rotate(25, 172, 88)"/>
+                <ellipse cx="174" cy="86" rx="2" ry="3.5" fill="rgba(176,120,136,0.1)" transform="rotate(-10, 174, 86)"/>
+
+                <!-- 散落的小点 -->
+                <circle cx="95" cy="60" r="1" fill="rgba(176,120,136,0.2)"/>
+                <circle cx="130" cy="45" r="0.8" fill="rgba(176,120,136,0.15)"/>
+                <circle cx="75" cy="85" r="0.6" fill="rgba(200,168,130,0.15)"/>
+                <circle cx="150" cy="75" r="0.7" fill="rgba(200,168,130,0.12)"/>
+            </svg>
+        </div>
+
+        <div class="subtitle">此 信 只 与 你</div>
+
+        <button class="heart-btn" id="heartBtn" onclick="triggerBloom()">
+            <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+                <path d="M32 56 C16 42, 4 30, 4 18 C4 9, 11 3, 19 3 C24 3, 28 5, 32 11 C36 5, 40 3, 45 3 C53 3, 60 9, 60 18 C60 30, 48 42, 32 56Z"
+                      fill="none"
+                      stroke="var(--rose-muted)"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      opacity="0.8"/>
+            </svg>
+        </button>
+
+        <div class="hint">轻触，有回音</div>
+    </div>
+
+    <div class="date-info" id="dateInfo"></div>
+    <div class="easter-egg">5.20</div>
+
+    <button class="music-btn" id="musicBtn" onclick="toggleMusic()" title="背景音乐">♪</button>
+    <audio id="bgMusic" loop preload="auto">
+        <source src="/static/kanon.flac" type="audio/flac">
+    </audio>
+
+    <script>
+        /* ====== 星星 ====== */
+        (function createStars() {
+            const c = document.getElementById('stars');
+            for (let i = 0; i < 60; i++) {
+                const s = document.createElement('div');
+                s.className = 'star';
+                s.style.left = Math.random() * 100 + '%';
+                s.style.top = Math.random() * 100 + '%';
+                s.style.animationDuration = (2 + Math.random() * 4) + 's';
+                s.style.animationDelay = Math.random() * 4 + 's';
+                c.appendChild(s);
+            }
+        })();
+
+        /* ====== 落花 ====== */
+        function createPetal() {
+            const petal = document.createElement('div');
+            petal.className = 'petal';
+            const size = 10 + Math.random() * 14;
+            const hue = 340 + Math.random() * 20;
+            const light = 70 + Math.random() * 10;
+            petal.style.left = Math.random() * 100 + 'vw';
+            petal.style.width = size + 'px';
+            petal.style.height = size + 'px';
+            petal.style.animationDuration = (8 + Math.random() * 10) + 's';
+            petal.style.animationDelay = Math.random() * 3 + 's';
+
+            petal.innerHTML = `<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                <ellipse cx="10" cy="8" rx="4.5" ry="7.5"
+                    fill="hsla(${hue}, 35%, ${light}%, 0.45)"
+                    transform="rotate(${10 + Math.random() * 20}, 10, 10)"/>
+            </svg>`;
+            document.body.appendChild(petal);
+            setTimeout(() => petal.remove(), (10 + Math.random() * 10) * 1000);
+        }
+        setInterval(createPetal, 600);
+
+        /* ====== 飘落的情话 — 波次循环系统 ====== */
+        const loveMessages = [
+            { text: "你是我见过最美的意外", tier: "main" },
+            { text: "想把所有的温柔都给你", tier: "main" },
+            { text: "你的笑容 是最美的风景", tier: "main" },
+            { text: "余生很长 想和你一起走", tier: "main" },
+            { text: "喜欢你 是今天 明天 每一天", tier: "main" },
+            { text: "遇见你 是此生最大的幸运", tier: "main" },
+            { text: "想牵你的手 从心动到古稀", tier: "main" },
+            { text: "世间美好 与你环环相扣", tier: "main" },
+            { text: "你来时 磅礴大雨都变成了风景", tier: "sub" },
+            { text: "我在人间贩卖黄昏", tier: "sub" },
+            { text: "只为收集世间温柔去见你", tier: "sub" },
+            { text: "月色与雪色之间 你是第三种绝色", tier: "sub" },
+            { text: "玲珑骰子安红豆 入骨相思知不知", tier: "sub" },
+            { text: "山有木兮木有枝", tier: "far" },
+            { text: "心悦君兮君不知", tier: "far" },
+            { text: "愿为西南风 长逝入君怀", tier: "far" },
+            { text: "晓看天色暮看云", tier: "far" },
+            { text: "行也思君 坐也思君", tier: "far" },
+            { text: "只愿君心似我心", tier: "far" },
+            { text: "定不负相思意", tier: "far" },
+            { text: "此情无计可消除", tier: "far" },
+            { text: "才下眉头 却上心头", tier: "sub" },
+            { text: "人生若只如初见", tier: "far" },
+            { text: "何事秋风悲画扇", tier: "far" },
+        ];
+
+        function shuffleArray(arr) {
+            const a = [...arr];
+            for (let i = a.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [a[i], a[j]] = [a[j], a[i]];
+            }
+            return a;
+        }
+
+        let fullDeck = shuffleArray(loveMessages);
+        let deckIdx = 0;
+
+        function getNextMsg() {
+            if (deckIdx >= fullDeck.length) {
+                fullDeck = shuffleArray(loveMessages);
+                deckIdx = 0;
+            }
+            return fullDeck[deckIdx++];
+        }
+
+        function spawnOneMsg(delay) {
+            setTimeout(() => {
+                const msg = getNextMsg();
+                const el = document.createElement('div');
+                el.className = `falling-msg tier-${msg.tier}`;
+                el.textContent = msg.text;
+                el.style.left = (5 + Math.random() * 75) + 'vw';
+
+                // 主句慢一些，远句快一些
+                const base = msg.tier === 'main' ? 18 : msg.tier === 'sub' ? 14 : 11;
+                el.style.animationDuration = (base + Math.random() * 6) + 's';
+
+                document.body.appendChild(el);
+                const dur = parseFloat(el.style.animationDuration);
+                setTimeout(() => el.remove(), (dur + 1) * 1000);
+            }, delay);
+        }
+
+        // 发射一波：8~12 条，交错落下
+        function launchWave() {
+            const count = 8 + Math.floor(Math.random() * 5);
+            // 间隔递增，营造疏密节奏
+            let gap = 0;
+            for (let i = 0; i < count; i++) {
+                gap += 200 + Math.random() * 600;
+                spawnOneMsg(gap);
+            }
+            // 整波结束后，等屏幕清空再发下一波
+            const waveDuration = gap + 22000;
+            setTimeout(launchWave, waveDuration);
+        }
+
+        // 页面加载后稍等一下再开始第一波
+        setTimeout(launchWave, 800);
+
+        /* ====== 日期 ====== */
+        fetch('/api/countdown').then(r => r.json()).then(d => {
+            document.getElementById('dateInfo').textContent =
+                d.days_left === 0 ? '今天' : `距离 ${d.next_520} 还有 ${d.days_left} 天`;
+        }).catch(() => {
+            document.getElementById('dateInfo').textContent = '';
+        });
+
+        /* ====== 点击粒子 ====== */
+        document.addEventListener('click', function(e) {
+            for (let i = 0; i < 2; i++) {
+                const h = document.createElement('div');
+                h.className = 'click-heart';
+                h.style.left = (e.clientX + (Math.random() - 0.5) * 50) + 'px';
+                h.style.top = (e.clientY + (Math.random() - 0.5) * 50) + 'px';
+                const sz = 16 + Math.random() * 12;
+                const hue = 340 + Math.random() * 20;
+                h.innerHTML = `<svg width="${sz}" height="${sz}" viewBox="0 0 64 64"><path d="M32 56 C16 42, 4 30, 4 18 C4 9, 11 3, 19 3 C24 3, 28 5, 32 11 C36 5, 40 3, 45 3 C53 3, 60 9, 60 18 C60 30, 48 42, 32 56Z" fill="hsla(${hue}, 35%, 70%, 0.5)"/></svg>`;
+                h.style.animationDuration = (0.8 + Math.random() * 0.6) + 's';
+                document.body.appendChild(h);
+                setTimeout(() => h.remove(), 1500);
+            }
+
+            if (Math.random() > 0.6) {
+                const words = ['念', '想你', '喜欢', '♡', '心悦', '倾心'];
+                const t = document.createElement('div');
+                t.className = 'float-text';
+                t.textContent = words[Math.floor(Math.random() * words.length)];
+                t.style.left = e.clientX + 'px';
+                t.style.top = (e.clientY - 15) + 'px';
+                document.body.appendChild(t);
+                setTimeout(() => t.remove(), 2200);
+            }
+        });
+
+        /* ====== 爱心按钮 — 全屏效果 ====== */
+        function triggerBloom() {
+            // 花瓣环绕
+            const rh = document.createElement('div');
+            rh.className = 'rotating-hearts';
+            for (let i = 0; i < 10; i++) {
+                const s = document.createElement('span');
+                s.textContent = ['✿', '❀', '♡', '✾', '❁'][i % 5];
+                s.style.animationDelay = (i * 0.2) + 's';
+                s.style.fontSize = (1 + Math.random() * 0.8) + 'rem';
+                s.style.color = `hsla(${340 + Math.random() * 20}, 35%, 70%, ${0.3 + Math.random() * 0.3})`;
+                rh.appendChild(s);
+            }
+            document.body.appendChild(rh);
+            setTimeout(() => rh.remove(), 4000);
+
+            // 全屏文字
+            const ov = document.createElement('div');
+            ov.className = 'bloom-overlay';
+            ov.innerHTML = '<div class="bloom-text">心悦于你</div>';
+            document.body.appendChild(ov);
+
+            for (let i = 0; i < 15; i++) {
+                setTimeout(createPetal, i * 80);
+            }
+
+            setTimeout(() => {
+                ov.style.transition = 'opacity 1.5s ease';
+                ov.style.opacity = '0';
+                setTimeout(() => ov.remove(), 1500);
+            }, 3000);
+        }
+
+        /* ====== 背景音乐 ====== */
+        const bgMusic = document.getElementById('bgMusic');
+        let musicPlaying = false;
+
+        function toggleMusic() {
+            const btn = document.getElementById('musicBtn');
+            if (!musicPlaying) {
+                bgMusic.volume = 0.5;
+                bgMusic.play();
+                musicPlaying = true;
+                btn.classList.add('active');
+            } else {
+                bgMusic.pause();
+                musicPlaying = false;
+                btn.classList.remove('active');
+            }
+        }
+    </script>
+</body>
+</html>
